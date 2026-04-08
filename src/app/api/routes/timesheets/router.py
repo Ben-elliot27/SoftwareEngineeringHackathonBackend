@@ -141,6 +141,11 @@ async def reject_entry(
         raise HTTPException(status_code=404, detail="Timesheet entry not found")
     if entry.status == EntryStatus.rejected:
         raise HTTPException(status_code=422, detail="Entry is already rejected")
+    if entry.status != EntryStatus.pending:
+        raise HTTPException(
+            status_code=422,
+            detail="Only pending entries can be rejected",
+        )
     approver = await get_user(db, payload.approved_by_id)
     if not approver:
         raise HTTPException(status_code=404, detail="Approver user not found")
