@@ -26,3 +26,8 @@ class TimeCode(Base):
     timesheet_entries: Mapped[list["TimesheetEntry"]] = relationship(
         "TimesheetEntry", back_populates="time_code"
     )
+    user_access: Mapped[list["UserTimeCodeAccess"]] = relationship(
+        "UserTimeCodeAccess",
+        back_populates="time_code",
+        cascade="all, delete-orphan",
+    )

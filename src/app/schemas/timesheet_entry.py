@@ -27,12 +27,7 @@ class TimesheetEntryUpdate(BaseModel):
     description: Optional[str] = None
 
 
-class ApprovalRequest(BaseModel):
-    approved_by_id: int = Field(..., description="ID of the manager approving the entry")
-
-
 class RejectionRequest(BaseModel):
-    approved_by_id: int = Field(..., description="ID of the manager rejecting the entry")
     rejection_reason: Optional[str] = Field(None, description="Reason for rejection")
 
 

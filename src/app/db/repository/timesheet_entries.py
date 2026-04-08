@@ -7,8 +7,6 @@ from sqlalchemy.orm import selectinload
 
 from app.db.models.timesheet_entry import EntryStatus, TimesheetEntry
 from app.schemas.timesheet_entry import (
-    ApprovalRequest,
-    RejectionRequest,
     TimesheetEntryCreate,
     TimesheetEntryUpdate,
 )
@@ -81,10 +79,11 @@ async def update_timesheet_entry(
 
 
 async def approve_timesheet_entry(
-    db: AsyncSession, entry: TimesheetEntry, payload: ApprovalRequest
+    db: AsyncSession, entry: TimesheetEntry, approver_id: int
 ) -> TimesheetEntry:
+    """Mark *entry* as approved by *approver_id* (taken from the JWT, not the payload)."""
     entry.status = EntryStatus.approved
-    entry.approved_by_id = payload.approved_by_id
+    entry.approved_by_id = approver_id
     entry.approved_at = datetime.now(timezone.utc)
     entry.rejection_reason = None
     await db.commit()
@@ -92,12 +91,16 @@ async def approve_timesheet_entry(
 
 
 async def reject_timesheet_entry(
-    db: AsyncSession, entry: TimesheetEntry, payload: RejectionRequest
+    db: AsyncSession,
+    entry: TimesheetEntry,
+    approver_id: int,
+    rejection_reason: Optional[str] = None,
 ) -> TimesheetEntry:
+    """Mark *entry* as rejected by *approver_id* (taken from the JWT, not the payload)."""
     entry.status = EntryStatus.rejected
-    entry.approved_by_id = payload.approved_by_id
+    entry.approved_by_id = approver_id
     entry.approved_at = datetime.now(timezone.utc)
-    entry.rejection_reason = payload.rejection_reason
+    entry.rejection_reason = rejection_reason
     await db.commit()
     return await get_timesheet_entry(db, entry.id)
 
