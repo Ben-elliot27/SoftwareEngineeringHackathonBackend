@@ -90,7 +90,7 @@ async def create_timesheet_entry_endpoint(
         raise HTTPException(status_code=404, detail="User not found")
     if not target_user.is_active:
         raise HTTPException(
-            status_code=422,
+            status_code=409,
             detail="Cannot create timesheet: target user is inactive",
         )
 
