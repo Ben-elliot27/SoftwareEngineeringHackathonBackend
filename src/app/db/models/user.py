@@ -19,6 +19,7 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     role: Mapped[UserRole] = mapped_column(
         Enum(UserRole, name="userrole"), nullable=False, default=UserRole.employee
     )
@@ -42,4 +43,9 @@ class User(Base):
         "TimesheetEntry",
         back_populates="approver",
         foreign_keys="TimesheetEntry.approved_by_id",
+    )
+    time_code_access: Mapped[list["UserTimeCodeAccess"]] = relationship(
+        "UserTimeCodeAccess",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )

@@ -1,4 +1,11 @@
+import logging
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
+
+logger = logging.getLogger(__name__)
+
+_INSECURE_DEFAULT_KEY = "change-this-to-a-long-random-secret-in-production"
 
 
 class Settings(BaseSettings):
@@ -27,6 +34,21 @@ class Settings(BaseSettings):
 
     # CORS
     CORS_ORIGINS: list[str] = ["*"]
+
+    # JWT / Auth
+    SECRET_KEY: str = _INSECURE_DEFAULT_KEY
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480  # 8 hours
+
+    @field_validator("SECRET_KEY")
+    @classmethod
+    def warn_insecure_secret(cls, v: str) -> str:
+        if v == _INSECURE_DEFAULT_KEY:
+            logger.warning(
+                "SECRET_KEY is set to the insecure default value. "
+                "Set a strong SECRET_KEY environment variable before deploying to production."
+            )
+        return v
 
     class Config:
         env_file = ".env"

@@ -3,6 +3,7 @@ from typing import Optional, Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import hash_password, verify_password
 from app.db.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
 
@@ -31,7 +32,9 @@ async def get_users(
 
 
 async def create_user(db: AsyncSession, payload: UserCreate) -> User:
-    user = User(**payload.model_dump())
+    data = payload.model_dump(exclude={"password"})
+    data["hashed_password"] = hash_password(payload.password)
+    user = User(**data)
     db.add(user)
     await db.commit()
     await db.refresh(user)
@@ -41,7 +44,9 @@ async def create_user(db: AsyncSession, payload: UserCreate) -> User:
 async def update_user(
     db: AsyncSession, user: User, payload: UserUpdate
 ) -> User:
-    data = payload.model_dump(exclude_unset=True)
+    data = payload.model_dump(exclude_unset=True, exclude={"password"})
+    if payload.password is not None:
+        data["hashed_password"] = hash_password(payload.password)
     for field, value in data.items():
         setattr(user, field, value)
     await db.commit()
@@ -52,3 +57,17 @@ async def update_user(
 async def delete_user(db: AsyncSession, user: User) -> None:
     await db.delete(user)
     await db.commit()
+
+
+async def authenticate_user(
+    db: AsyncSession, email: str, password: str
+) -> Optional[User]:
+    """Return the user if credentials are valid and account is active, else None."""
+    user = await get_user_by_email(db, email)
+    if user is None:
+        return None
+    if not user.is_active:
+        return None
+    if not verify_password(password, user.hashed_password):
+        return None
+    return user
