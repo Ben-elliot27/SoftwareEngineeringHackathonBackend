@@ -33,5 +33,5 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token = create_access_token(subject=user.id, role=user.role.value)
-    logger.info("User %s (%s) logged in", user.email, user.role)
+    logger.info("User logged in with role %s", user.role)
     return Token(access_token=access_token)

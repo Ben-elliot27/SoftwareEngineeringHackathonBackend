@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models.time_code import TimeCode
+from app.db.models.user import User
 from app.db.models.user_time_code import UserTimeCodeAccess
 from app.schemas.time_code import TimeCodeCreate, TimeCodeUpdate
 
@@ -105,12 +106,12 @@ async def revoke_time_code_access(
 
 async def get_users_for_time_code(
     db: AsyncSession, time_code_id: int
-) -> Sequence[UserTimeCodeAccess]:
-    """Return all access grants for a given time code."""
+) -> Sequence[User]:
+    """Return all users who have access to a given time code."""
     result = await db.execute(
-        select(UserTimeCodeAccess).where(
-            UserTimeCodeAccess.time_code_id == time_code_id
-        )
+        select(User)
+        .join(UserTimeCodeAccess, UserTimeCodeAccess.user_id == User.id)
+        .where(UserTimeCodeAccess.time_code_id == time_code_id)
     )
     return result.scalars().all()
 

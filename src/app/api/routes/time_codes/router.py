@@ -128,14 +128,7 @@ async def list_time_code_access(
     tc = await get_time_code(db, time_code_id)
     if not tc:
         raise HTTPException(status_code=404, detail="Time code not found")
-    grants = await get_users_for_time_code(db, time_code_id)
-    # Resolve user objects for the response
-    users = []
-    for grant in grants:
-        user = await get_user(db, grant.user_id)
-        if user:
-            users.append(user)
-    return users
+    return await get_users_for_time_code(db, time_code_id)
 
 
 @router.post("/{time_code_id}/access/{user_id}", status_code=201)
